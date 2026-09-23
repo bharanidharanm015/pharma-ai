@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 8 12 22;
+  --foreground: 248 250 252;
+}
+
+body {
+  color: rgb(var(--foreground));
+  background-color: #080c16;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  overflow-x: hidden;
+}
+
+/* Custom scientific dark scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #080c16;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Subtitle and card borders */
+.scientific-border {
+  border: 1px solid rgba(56, 189, 248, 0.15);
+}
+
+.scientific-card {
+  background: #0e1526;
+  border: 1px solid #1e293b;
+  border-radius: 0.5rem;
+}
+
+.scientific-card:hover {
+  border-color: rgba(56, 189, 248, 0.25);
+}
+
+/* Focus styles */
+*:focus-visible {
+  outline: 2px solid #0284c7;
+  outline-offset: 2px;
+}
