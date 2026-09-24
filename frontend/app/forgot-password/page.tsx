@@ -1,37 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import Link from "next/link";
-import {
-  loginUser,
-  checkIsAuthenticated,
-} from "@/lib/supabase/auth";
-import { Dna, Lock, Mail, AlertCircle, ArrowRight, FlaskConical, UserPlus } from "lucide-react";
+import { resetPassword } from "@/lib/supabase/auth";
+import { Dna, Mail, AlertCircle, ArrowRight, ArrowLeft, CheckCircle2, KeyRound } from "lucide-react";
 
-export default function LoginPage() {
-  const router = useRouter();
+export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (checkIsAuthenticated()) {
-      router.replace("/dashboard");
-    }
-  }, [router]);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccessMessage(null);
 
     try {
-      await loginUser(email, password);
-      router.push("/dashboard");
+      const res = await resetPassword(email);
+      setSuccessMessage(res.message);
     } catch (err: any) {
-      setError(err?.message || "Authentication failed. Please verify your credentials.");
+      setError(err?.message || "Failed to initiate password reset.");
     } finally {
       setLoading(false);
     }
@@ -43,29 +33,32 @@ export default function LoginPage() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(2,132,199,0.12),transparent_70%)] pointer-events-none" />
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b15_1px,transparent_1px),linear-gradient(to_bottom,#1e293b15_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none" />
 
-      {/* Top Banner Notice */}
-      <div className="max-w-md w-full mx-auto text-center space-y-2 relative z-10 pt-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pharma-primary/10 border border-pharma-primary/30 text-[11px] font-mono text-pharma-accent font-semibold tracking-wider uppercase">
-          <FlaskConical className="h-3.5 w-3.5 text-pharma-cyan" />
-          PHARMACEUTICAL AI RESEARCH PLATFORM
-        </div>
-      </div>
-
-      {/* Login Card */}
+      {/* Forgot Password Card */}
       <div className="max-w-md w-full mx-auto relative z-10 my-auto">
         <div className="scientific-card p-6 sm:p-8 border border-surface-border shadow-2xl backdrop-blur-xl bg-surface/90">
-          {/* Brand Header */}
+          {/* Header */}
           <div className="text-center mb-6 space-y-2">
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-surface-card border border-pharma-cyan/40 text-pharma-cyan shadow-lg shadow-pharma-cyan/10 mb-2">
-              <Dna className="h-6 w-6" />
+              <KeyRound className="h-6 w-6" />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-white flex items-center justify-center gap-1.5 font-mono">
-              PHARMA <span className="text-pharma-cyan">AI</span>
+            <h1 className="text-2xl font-bold tracking-tight text-white font-mono">
+              Reset Password
             </h1>
             <p className="text-xs text-pharma-muted font-medium">
-              In Silico Formulation & Biopharmaceutics Intelligence
+              Enter your registered researcher email address to receive password reset instructions.
             </p>
           </div>
+
+          {/* Success Message */}
+          {successMessage && (
+            <div className="mb-5 p-3.5 rounded-lg bg-emerald-950/40 border border-emerald-800/60 text-emerald-300 text-xs flex items-start gap-2.5">
+              <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-emerald-400" />
+              <div>
+                <div className="font-semibold">{successMessage}</div>
+                <p className="text-slate-400 mt-1">Please check your inbox and follow the instructions provided.</p>
+              </div>
+            </div>
+          )}
 
           {/* Error Message */}
           {error && (
@@ -79,7 +72,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-mono uppercase text-slate-400 mb-1.5 font-medium">
-                Researcher Email
+                Registered Email Address
               </label>
               <div className="relative">
                 <Mail className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
@@ -88,33 +81,8 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="scientist@university.edu"
+                  placeholder="researcher@institution.edu"
                   className="w-full pl-9 pr-3 py-2 bg-surface-card border border-surface-border rounded-lg text-sm text-white focus:outline-none focus:border-pharma-cyan transition-colors font-mono"
-                />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-mono uppercase text-slate-400 font-medium">
-                  Password
-                </label>
-                <Link
-                  href="/forgot-password"
-                  className="text-[11px] font-mono text-pharma-cyan hover:underline"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-              <div className="relative">
-                <Lock className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  className="w-full pl-9 pr-3 py-2 bg-surface-card border border-surface-border rounded-lg text-sm text-white focus:outline-none focus:border-pharma-cyan transition-colors"
                 />
               </div>
             </div>
@@ -127,28 +95,25 @@ export default function LoginPage() {
               {loading ? (
                 <>
                   <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>AUTHENTICATING...</span>
+                  <span>TRANSMITTING REQUEST...</span>
                 </>
               ) : (
                 <>
-                  <span>SIGN IN TO PLATFORM</span>
+                  <span>SEND RESET INSTRUCTIONS</span>
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
             </button>
           </form>
 
-          {/* Sign Up Link */}
-          <div className="mt-6 pt-4 border-t border-surface-border text-center space-y-2">
-            <p className="text-xs text-slate-400">
-              New to Pharma AI?
-            </p>
+          {/* Back to Login Link */}
+          <div className="mt-6 pt-4 border-t border-surface-border text-center">
             <Link
-              href="/signup"
-              className="inline-flex items-center gap-1.5 text-xs font-mono font-medium text-pharma-cyan hover:text-white transition-colors"
+              href="/login"
+              className="inline-flex items-center gap-1.5 text-xs font-mono text-slate-400 hover:text-white transition-colors"
             >
-              <UserPlus className="h-3.5 w-3.5" />
-              Create Researcher Account
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Back to Sign In
             </Link>
           </div>
         </div>

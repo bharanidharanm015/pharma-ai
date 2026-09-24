@@ -25,19 +25,7 @@ def init_database():
     conn = get_db_connection()
     cur = conn.cursor()
 
-    # 1. Users table
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id TEXT PRIMARY KEY,
-            email TEXT UNIQUE NOT NULL,
-            full_name TEXT NOT NULL,
-            role TEXT NOT NULL,
-            institution TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-
-    # 2. Drugs table
+    # 1. Drugs table
     cur.execute("""
         CREATE TABLE IF NOT EXISTS drugs (
             id TEXT PRIMARY KEY,
@@ -106,20 +94,6 @@ def init_database():
     """)
 
     conn.commit()
-
-    # Seed users if empty
-    cur.execute("SELECT COUNT(*) FROM users")
-    if cur.fetchone()[0] == 0:
-        cur.executemany(
-            "INSERT INTO users (id, email, full_name, role, institution) VALUES (?, ?, ?, ?, ?)",
-            [
-                ("USR-001", "student@pharma-ai.org", "Alex Rivera", "STUDENT", "Faculty of Pharmacy"),
-                ("USR-002", "researcher@pharma-ai.org", "Dr. Elena Vance", "RESEARCHER", "Computational PK Research Lab"),
-                ("USR-003", "supervisor@pharma-ai.org", "Prof. Marcus Thorne", "SUPERVISOR", "Division of Biopharmaceutics"),
-                ("USR-004", "admin@pharma-ai.org", "System Administrator", "ADMIN", "Pharma AI Platform"),
-            ]
-        )
-        conn.commit()
 
     # Seed benchmark drugs if empty
     cur.execute("SELECT COUNT(*) FROM drugs")

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ShieldCheck, AlertTriangle, LogOut, Dna } from "lucide-react";
-import { logoutAdmin, DESIGNATED_ADMIN_EMAIL } from "@/lib/supabase/auth";
+import { logoutResearcher } from "@/lib/supabase/auth";
 import { useRouter } from "next/navigation";
 
 export function AppHeader({
@@ -16,8 +16,8 @@ export function AppHeader({
   const [selectedDrug, setSelectedDrug] = useState("Ibuprofen");
 
   const handleLogout = async () => {
-    if (confirm("End administrator session and return to login?")) {
-      await logoutAdmin();
+    if (confirm("End private research session and return to login?")) {
+      await logoutResearcher();
       router.replace("/login");
     }
   };
@@ -28,7 +28,7 @@ export function AppHeader({
       <div className="bg-pharma-primary/10 border-b border-pharma-primary/20 px-4 py-1 flex items-center justify-between text-[11px] font-mono">
         <div className="flex items-center gap-2 text-pharma-cyan font-bold tracking-wider uppercase">
           <ShieldCheck className="h-3.5 w-3.5 text-pharma-cyan" />
-          <span>PRIVATE ADMIN RESEARCH ENVIRONMENT</span>
+          <span>PRIVATE PHARMACEUTICAL AI RESEARCH PLATFORM</span>
         </div>
         <div className="flex items-center gap-1.5 text-amber-400 font-semibold tracking-wider uppercase hidden sm:flex">
           <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />

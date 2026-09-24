@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppHeader } from "@/components/layout/AppHeader";
+import { getCurrentUserSession } from "@/lib/supabase/auth";
+import { pharmaApi } from "@/lib/api-client";
 import {
   FileSpreadsheet,
   Printer,
@@ -11,12 +13,22 @@ import {
   AlertTriangle,
   FileText,
   Dna,
+  ShieldAlert,
+  Sparkles,
 } from "lucide-react";
 
 export default function ReportsPage() {
   const [reportTitle, setReportTitle] = useState("Computational Biopharmaceutics & Pharmacometrics Evaluation");
   const [drugName, setDrugName] = useState("Ibuprofen (400mg)");
+  const [investigatorName, setInvestigatorName] = useState("Research Investigator");
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const session = getCurrentUserSession();
+    if (session?.fullName || session?.email) {
+      setInvestigatorName(session.fullName || session.email);
+    }
+  }, []);
 
   const currentDate = new Date().toLocaleDateString("en-US", {
     month: "long",
@@ -33,8 +45,10 @@ export default function ReportsPage() {
       title: reportTitle,
       drug: drugName,
       date: currentDate,
-      platform: "PHARMA AI — Private Admin Research Environment",
-      disclaimer: "RESEARCH SIMULATION — NOT CLINICALLY VALIDATED",
+      investigator: investigatorName,
+      platform: "PHARMA AI — Pharmaceutical AI Research Platform",
+      data_classification: "SIMULATED DATA",
+      regulatory_notice: "RESEARCH SIMULATION — NOT CLINICALLY VALIDATED",
       metrics: {
         dissolution_model: "Korsmeyer-Peppas (k=24.0, n=0.55)",
         fa_infinity: 0.95,
@@ -47,7 +61,7 @@ export default function ReportsPage() {
         hybrid_r2: 0.98,
         optimal_dose_mg: 385.0,
         optimal_polymer_percent: 24.5,
-        validation_status: "VALIDATED WITH ASSUMPTIONS",
+        validation_status: "In Silico Validated",
       },
     };
 
@@ -55,13 +69,13 @@ export default function ReportsPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `pharma_ai_research_report_${Date.now()}.json`;
+    a.download = `pharma_ai_simulated_report_${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
   const handleCopyMarkdown = () => {
-    const md = `# ${reportTitle}\n\n**Evaluated API**: ${drugName}\n**Date**: ${currentDate}\n**Environment**: PHARMA AI Private Admin Environment\n**Regulatory Disclaimer**: RESEARCH SIMULATION — NOT CLINICALLY VALIDATED\n\n## 1. Executive Summary\nIn silico biopharmaceutical evaluation combining Noyes-Whitney dissolution, 5-organ continuous Runge-Kutta 4th order PBPK ODE solution, Monte Carlo virtual population envelopes, and empirical machine learning cross-benchmarking.\n\n## 2. Key Findings\n- **Dissolution**: Korsmeyer-Peppas anomalous diffusion-erosion matrix release.\n- **PBPK Exposure**: Plasma Cmax = 13.8 mg/L, Tmax = 1.85 h, AUC0-inf = 118.2 mg*h/L.\n- **Mass Balance Error**: <0.03% strict numerical conservation.\n- **Validation**: Hybrid PBPK+ML R² = 0.98, RMSE = 0.24 mg/L.\n- **Optimization**: Candidate formulation identified at 385 mg dose, 24.5% polymer concentration.\n`;
+    const md = `# ${reportTitle}\n\n**Data Classification**: SIMULATED DATA\n**Evaluated API**: ${drugName}\n**Investigator**: ${investigatorName}\n**Date**: ${currentDate}\n**Platform**: PHARMA AI Pharmaceutical Research Platform\n**Regulatory Disclaimer**: RESEARCH SIMULATION — NOT CLINICALLY VALIDATED\n\n## 1. Executive Summary\nIn silico biopharmaceutical evaluation combining Noyes-Whitney dissolution, 5-organ continuous Runge-Kutta 4th order PBPK ODE solution, Monte Carlo virtual population envelopes, and empirical machine learning cross-benchmarking.\n\n## 2. Key Findings\n- **Dissolution**: Korsmeyer-Peppas anomalous diffusion-erosion matrix release.\n- **PBPK Exposure**: Plasma Cmax = 13.8 mg/L, Tmax = 1.85 h, AUC0-inf = 118.2 mg*h/L.\n- **Mass Balance Error**: <0.03% strict numerical conservation.\n- **Validation**: Hybrid PBPK+ML R² = 0.98, RMSE = 0.24 mg/L.\n- **Optimization**: Candidate formulation identified at 385 mg dose, 24.5% polymer concentration.\n`;
     navigator.clipboard.writeText(md);
     setCopied(true);
     setTimeout(() => setCopied(false), 3000);
@@ -79,7 +93,7 @@ export default function ReportsPage() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg bg-surface border border-surface-border">
           <div>
             <h3 className="text-sm font-bold text-white font-mono uppercase">REPORT GENERATION CONTROLS</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Export publication dossiers for peer review and internal audits</p>
+            <p className="text-xs text-slate-400 mt-0.5">Export publication dossiers labeled SIMULATED DATA for research documentation</p>
           </div>
 
           <div className="flex items-center gap-2.5 flex-wrap">
@@ -120,7 +134,12 @@ export default function ReportsPage() {
                   PHARMA AI RESEARCH DOSSIER
                 </span>
               </div>
-              <span className="text-xs font-mono text-slate-400 print:text-gray-500">{currentDate}</span>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-mono font-bold uppercase print:border print:border-gray-800 print:text-black">
+                  SIMULATED DATA
+                </span>
+                <span className="text-xs font-mono text-slate-400 print:text-gray-500">{currentDate}</span>
+              </div>
             </div>
 
             <h1 className="text-xl sm:text-2xl font-bold text-white print:text-black tracking-tight">
@@ -129,8 +148,8 @@ export default function ReportsPage() {
 
             <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-slate-300 print:text-gray-700 pt-1">
               <div><strong className="text-white print:text-black">Evaluated Compound:</strong> {drugName}</div>
-              <div><strong className="text-white print:text-black">Investigator:</strong> System Administrator</div>
-              <div><strong className="text-white print:text-black">Environment:</strong> Private Single-Admin Console</div>
+              <div><strong className="text-white print:text-black">Investigator:</strong> {investigatorName}</div>
+              <div><strong className="text-white print:text-black">Environment:</strong> Private Research Platform</div>
             </div>
 
             {/* Mandatory Regulatory Warning */}
@@ -154,9 +173,14 @@ export default function ReportsPage() {
 
           {/* Section 2: Key Computational Metrics Table */}
           <div className="space-y-3">
-            <h2 className="text-sm font-bold font-mono uppercase text-pharma-cyan print:text-blue-700 tracking-wider">
-              2. Quantitative Findings & Exposure Metrics
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold font-mono uppercase text-pharma-cyan print:text-blue-700 tracking-wider">
+                2. Quantitative Findings & Exposure Metrics
+              </h2>
+              <span className="text-[10px] font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
+                [SIMULATED DATA]
+              </span>
+            </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs font-mono border border-surface-border print:border-gray-300">
@@ -225,7 +249,7 @@ export default function ReportsPage() {
 
           {/* Section 4: Sign-off & Audit */}
           <div className="border-t border-surface-border pt-4 flex flex-col sm:flex-row justify-between text-xs font-mono text-slate-400 print:text-gray-600 gap-2">
-            <div>Authored by: Administrator (admin@pharma.ai)</div>
+            <div>Authored by: {investigatorName}</div>
             <div>Verification Status: IN SILICO VERIFIED — NOT CLINICALLY VALIDATED</div>
           </div>
         </div>

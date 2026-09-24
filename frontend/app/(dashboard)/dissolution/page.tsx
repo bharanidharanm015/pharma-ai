@@ -254,6 +254,19 @@ export default function DissolutionPage() {
                   </div>
                 </div>
               )}
+
+              <div className="flex items-center justify-between p-4 rounded-xl bg-surface border border-surface-border">
+                <div className="text-xs text-slate-400">
+                  Next in Pipeline: <span className="text-white font-semibold">Gastrointestinal Absorption Kinetics</span>
+                </div>
+                <Link
+                  href="/absorption"
+                  className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono font-bold flex items-center gap-2 transition-colors"
+                >
+                  <span>Proceed to Absorption Studio</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
             </div>
           </div>
         )}

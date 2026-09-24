@@ -165,26 +165,32 @@ export function simulatePBPK5Compartment(params: PBPKConfigParams): PBPKResult {
       maxMassError = currentError;
     }
 
-    // Runge-Kutta 4th Order (RK4) integration
-    const k1 = computeDerivatives(state);
-    const s1 = stepState(state, k1, dt * 0.5);
+    // Adaptive sub-stepping for stiff ODE stability (residence time tau ~ 0.014h)
+    const nSub = Math.max(20, Math.ceil(dt / 0.005));
+    const dtSub = dt / nSub;
 
-    const k2 = computeDerivatives(s1);
-    const s2 = stepState(state, k2, dt * 0.5);
+    for (let sub = 0; sub < nSub; sub++) {
+      // Runge-Kutta 4th Order (RK4) integration
+      const k1 = computeDerivatives(state);
+      const s1 = stepState(state, k1, dtSub * 0.5);
 
-    const k3 = computeDerivatives(s2);
-    const s3 = stepState(state, k3, dt);
+      const k2 = computeDerivatives(s1);
+      const s2 = stepState(state, k2, dtSub * 0.5);
 
-    const k4 = computeDerivatives(s3);
+      const k3 = computeDerivatives(s2);
+      const s3 = stepState(state, k3, dtSub);
 
-    state = {
-      aGut: Math.max(0, state.aGut + (dt / 6.0) * (k1.aGut + 2 * k2.aGut + 2 * k3.aGut + k4.aGut)),
-      aPlasma: Math.max(0, state.aPlasma + (dt / 6.0) * (k1.aPlasma + 2 * k2.aPlasma + 2 * k3.aPlasma + k4.aPlasma)),
-      aLiver: Math.max(0, state.aLiver + (dt / 6.0) * (k1.aLiver + 2 * k2.aLiver + 2 * k3.aLiver + k4.aLiver)),
-      aKidney: Math.max(0, state.aKidney + (dt / 6.0) * (k1.aKidney + 2 * k2.aKidney + 2 * k3.aKidney + k4.aKidney)),
-      aTissue: Math.max(0, state.aTissue + (dt / 6.0) * (k1.aTissue + 2 * k2.aTissue + 2 * k3.aTissue + k4.aTissue)),
-      aElim: Math.max(0, state.aElim + (dt / 6.0) * (k1.aElim + 2 * k2.aElim + 2 * k3.aElim + k4.aElim)),
-    };
+      const k4 = computeDerivatives(s3);
+
+      state = {
+        aGut: Math.max(0, state.aGut + (dtSub / 6.0) * (k1.aGut + 2 * k2.aGut + 2 * k3.aGut + k4.aGut)),
+        aPlasma: Math.max(0, state.aPlasma + (dtSub / 6.0) * (k1.aPlasma + 2 * k2.aPlasma + 2 * k3.aPlasma + k4.aPlasma)),
+        aLiver: Math.max(0, state.aLiver + (dtSub / 6.0) * (k1.aLiver + 2 * k2.aLiver + 2 * k3.aLiver + k4.aLiver)),
+        aKidney: Math.max(0, state.aKidney + (dtSub / 6.0) * (k1.aKidney + 2 * k2.aKidney + 2 * k3.aKidney + k4.aKidney)),
+        aTissue: Math.max(0, state.aTissue + (dtSub / 6.0) * (k1.aTissue + 2 * k2.aTissue + 2 * k3.aTissue + k4.aTissue)),
+        aElim: Math.max(0, state.aElim + (dtSub / 6.0) * (k1.aElim + 2 * k2.aElim + 2 * k3.aElim + k4.aElim)),
+      };
+    }
   }
 
   // Calculate Summary Metrics

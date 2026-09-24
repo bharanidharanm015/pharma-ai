@@ -2,13 +2,13 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { checkIsAdminAuthenticated } from "@/lib/supabase/auth";
+import { checkIsResearcherAuthenticated } from "@/lib/supabase/auth";
 
 export default function RootPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (checkIsAdminAuthenticated()) {
+    if (checkIsResearcherAuthenticated()) {
       router.replace("/dashboard");
     } else {
       router.replace("/login");

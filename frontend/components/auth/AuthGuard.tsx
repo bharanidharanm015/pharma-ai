@@ -2,15 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { checkIsAdminAuthenticated, getAdminSession } from "@/lib/supabase/auth";
-import { ShieldCheck, Dna } from "lucide-react";
+import { checkIsAuthenticated } from "@/lib/supabase/auth";
+import { Dna } from "lucide-react";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const isAuth = checkIsAdminAuthenticated();
+    const isAuth = checkIsAuthenticated();
     if (!isAuth) {
       router.replace("/login");
     } else {
@@ -29,7 +29,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
             <h2 className="text-sm font-bold tracking-tight text-white flex items-center gap-1 font-mono">
               PHARMA <span className="text-pharma-cyan">AI</span>
             </h2>
-            <p className="text-[10px] text-slate-400 font-mono">VERIFYING ADMIN CREDENTIALS...</p>
+            <p className="text-[10px] text-slate-400 font-mono">VERIFYING RESEARCH SESSION...</p>
           </div>
         </div>
         <div className="w-48 h-1 bg-surface-border rounded-full overflow-hidden">

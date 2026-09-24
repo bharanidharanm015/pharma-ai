@@ -25,7 +25,7 @@ export interface XAIInputFeatures {
 }
 
 export function computeModelExplanation(
-  features: XAIInputFeatures,
+  rawFeatures: Partial<XAIInputFeatures>,
   targetMetric: "AUC" | "Cmax" = "AUC"
 ): XAIResult {
   // Baseline reference human population values (expected value E[f(X)])
@@ -39,6 +39,18 @@ export function computeModelExplanation(
     particle_size_um: 50.0,
     patient_weight_kg: 70.0,
     clearance_l_h: 3.5,
+  };
+
+  const features: XAIInputFeatures = {
+    dose_mg: rawFeatures.dose_mg ?? baselineFeatures.dose_mg,
+    molecular_weight: rawFeatures.molecular_weight ?? baselineFeatures.molecular_weight,
+    logp: rawFeatures.logp ?? baselineFeatures.logp,
+    solubility_mg_ml: rawFeatures.solubility_mg_ml ?? baselineFeatures.solubility_mg_ml,
+    permeability_peff: rawFeatures.permeability_peff ?? baselineFeatures.permeability_peff,
+    polymer_percent: rawFeatures.polymer_percent ?? (rawFeatures as any).polymer_concentration ?? baselineFeatures.polymer_percent,
+    particle_size_um: rawFeatures.particle_size_um ?? (rawFeatures as any).particle_size_d50_um ?? baselineFeatures.particle_size_um,
+    patient_weight_kg: rawFeatures.patient_weight_kg ?? baselineFeatures.patient_weight_kg,
+    clearance_l_h: rawFeatures.clearance_l_h ?? baselineFeatures.clearance_l_h,
   };
 
   // Prediction function derived from biopharmaceutical model

@@ -9,7 +9,7 @@ export default function DashboardLayout({
   return (
     <AuthGuard>
       <div className="flex min-h-screen bg-background text-pharma-text antialiased">
-        {/* Protected Admin Sidebar */}
+        {/* Private Research Platform Sidebar */}
         <AppSidebar />
 
         {/* Protected Dashboard Content */}

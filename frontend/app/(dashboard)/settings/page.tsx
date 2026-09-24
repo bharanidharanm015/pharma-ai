@@ -5,28 +5,29 @@ import Link from "next/link";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { pharmaApi } from "@/lib/api-client";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
-import { DESIGNATED_ADMIN_EMAIL } from "@/lib/supabase/auth";
-import { AdminProfile } from "@/lib/types";
+import { getCurrentUserSession, logoutUser } from "@/lib/supabase/auth";
+import { UserSession } from "@/lib/types";
 import {
   Settings,
   Database,
   Trash2,
   RefreshCw,
-  ShieldCheck,
   Cpu,
   AlertTriangle,
   Server,
   Lock,
   CheckCircle2,
   User,
-  ArrowRight,
-  Edit3,
+  LogOut,
+  Sliders,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function SettingsPage() {
+  const router = useRouter();
+  const [session, setSession] = useState<UserSession | null>(null);
   const [supabaseActive, setSupabaseActive] = useState(false);
   const [tableStats, setTableStats] = useState<Record<string, number>>({});
-  const [adminProfile, setAdminProfile] = useState<AdminProfile | null>(null);
   const [loading, setLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
 
@@ -37,11 +38,10 @@ export default function SettingsPage() {
 
   const loadStats = async () => {
     setSupabaseActive(isSupabaseConfigured());
-    const stats = await pharmaApi.getTableStats();
-    setTableStats(stats);
+    setSession(getCurrentUserSession());
     try {
-      const p = await pharmaApi.getAdminProfile();
-      setAdminProfile(p);
+      const stats = await pharmaApi.getTableStats();
+      setTableStats(stats);
     } catch (e) {
       console.error(e);
     }
@@ -52,11 +52,11 @@ export default function SettingsPage() {
   }, []);
 
   const handlePurgeDemo = async () => {
-    if (confirm("Are you sure you want to PURGE all DEMO DATA from the platform? Only custom scenarios will remain.")) {
+    if (confirm("Are you sure you want to purge benchmark reference records? Custom research scenarios will remain.")) {
       setLoading(true);
       try {
         const res = await pharmaApi.purgeDemoData();
-        setStatusMsg(`Successfully purged ${res.purgedCount} DEMO DATA record(s).`);
+        setStatusMsg(`Successfully purged ${res.purgedCount} benchmark record(s).`);
         setTimeout(() => setStatusMsg(null), 4000);
         await loadStats();
       } finally {
@@ -77,11 +77,18 @@ export default function SettingsPage() {
     }
   };
 
+  const handleLogout = async () => {
+    if (confirm("End research session and return to login?")) {
+      await logoutUser();
+      router.replace("/login");
+    }
+  };
+
   return (
     <div className="flex-1 space-y-6">
       <AppHeader
         title="Settings & System Configuration"
-        subtitle="Supabase PostgreSQL Infrastructure, Single-Admin Identity & Demo Data Lifecycle Controls"
+        subtitle="Supabase PostgreSQL Infrastructure, User Workspace & Computational Solver Parameters"
       />
 
       <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto">
@@ -93,136 +100,108 @@ export default function SettingsPage() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column: Admin Identity & Security */}
+          {/* Left Column: Researcher Identity & Security */}
           <div className="lg:col-span-5 space-y-6">
-            {/* Admin Personal Details Card */}
+            {/* Researcher Access Card */}
             <div className="scientific-card p-6 space-y-4 border-pharma-cyan/40 bg-surface-card/70">
               <div className="flex items-center justify-between border-b border-surface-border pb-3">
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-pharma-cyan" />
                   <h3 className="text-sm font-bold text-white font-mono uppercase">
-                    ADMIN PERSONAL DETAILS
+                    RESEARCHER ACCOUNT
                   </h3>
                 </div>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-pharma-cyan/10 border border-pharma-cyan/30 text-pharma-cyan font-bold">
-                  POSTGRESQL SECURE
+                  ACTIVE SESSION
                 </span>
-              </div>
-
-              <div className="flex items-center gap-3.5">
-                {adminProfile?.profile_photo_url ? (
-                  <img
-                    src={adminProfile.profile_photo_url}
-                    alt={adminProfile.full_name}
-                    className="h-12 w-12 rounded-xl object-cover border border-pharma-cyan/50"
-                  />
-                ) : (
-                  <div className="h-12 w-12 rounded-xl bg-surface border border-pharma-cyan/40 flex items-center justify-center text-pharma-cyan">
-                    <User className="h-6 w-6" />
-                  </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-bold text-white truncate">
-                    {adminProfile?.full_name || "Primary Administrator"}
-                  </div>
-                  <div className="text-xs font-mono text-slate-400 truncate">
-                    {adminProfile?.email_address || DESIGNATED_ADMIN_EMAIL}
-                  </div>
-                  <div className="text-[10px] font-mono text-emerald-400">
-                    {adminProfile?.blood_group ? `Blood: ${adminProfile.blood_group}` : "Profile Configured"} • {adminProfile?.weight_kg ? `${adminProfile.weight_kg}kg / ${adminProfile.height_cm}cm` : ""}
-                  </div>
-                </div>
-              </div>
-
-              <p className="text-xs text-slate-300 font-sans leading-relaxed">
-                Manage your date of birth, automatically computed age, weight, height, computed BMI, contact info, emergency contacts, and laboratory notes.
-              </p>
-
-              <Link
-                href="/settings/profile"
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-pharma-primary hover:bg-pharma-primary/90 text-white font-mono text-xs font-bold transition-all shadow-md shadow-pharma-cyan/10 group"
-              >
-                <span>Edit & View Personal Details</span>
-                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </div>
-
-            {/* Admin Profile */}
-            <div className="scientific-card p-6 space-y-4">
-              <div className="flex items-center gap-2 border-b border-surface-border pb-3">
-                <Lock className="h-4 w-4 text-pharma-cyan" />
-                <h3 className="text-sm font-bold text-white font-mono uppercase">
-                  SINGLE-ADMIN AUTHENTICATION IDENTITY
-                </h3>
               </div>
 
               <div className="space-y-3 text-xs font-mono">
-                <div className="p-3 rounded-lg bg-surface-card border border-surface-border space-y-1.5">
-                  <div className="text-[10px] uppercase text-slate-400">AUTHORIZED ACCOUNT EMAIL</div>
-                  <div className="text-white font-bold text-sm truncate">{DESIGNATED_ADMIN_EMAIL}</div>
-                  <div className="text-[10px] text-emerald-400 flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                    <span>Active Authenticated Session</span>
+                <div className="p-3 rounded-lg bg-surface-card border border-surface-border space-y-1">
+                  <div className="text-slate-400 uppercase text-[10px]">Investigator Name:</div>
+                  <div className="text-white font-bold text-sm truncate">
+                    {session?.fullName || "Research Scientist"}
                   </div>
                 </div>
 
-                <div className="p-3 bg-surface-card border border-surface-border rounded-lg space-y-1">
-                  <div className="text-[10px] uppercase text-slate-400">ACCESS RESTRICTION POLICY</div>
-                  <p className="text-[11px] text-slate-300 font-sans leading-relaxed">
-                    This platform enforces a strict single-admin architecture. Account creation, registration, guest browsing, and multi-user roles are disabled at the engine level.
-                  </p>
+                <div className="p-3 rounded-lg bg-surface-card border border-surface-border space-y-1">
+                  <div className="text-slate-400 uppercase text-[10px]">Email Address:</div>
+                  <div className="text-pharma-cyan font-bold text-sm truncate">
+                    {session?.email || "Local Session"}
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-lg bg-surface-card border border-surface-border space-y-1">
+                  <div className="text-slate-400 uppercase text-[10px]">Institution / Affiliation:</div>
+                  <div className="text-slate-200">
+                    {session?.affiliation || "Computational Biopharmaceutics Laboratory"}
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-lg bg-surface border border-surface-border space-y-1">
+                  <div className="text-slate-400 uppercase text-[10px]">Data Isolation Policy:</div>
+                  <div className="text-emerald-400 font-semibold text-xs">
+                    Row Level Security (RLS) via auth.uid()
+                  </div>
+                  <div className="text-[10px] text-slate-400 leading-relaxed font-sans">
+                    Each researcher maintains private datasets with zero cross-tenant contamination.
+                  </div>
                 </div>
               </div>
+
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-rose-950/40 hover:bg-rose-900/50 border border-rose-800/60 text-rose-300 font-mono text-xs font-bold transition-all cursor-pointer"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Sign Out of Research Workspace</span>
+              </button>
             </div>
 
-            {/* Supabase Connectivity */}
+            {/* Supabase Connection */}
             <div className="scientific-card p-6 space-y-4">
-              <div className="flex items-center justify-between border-b border-surface-border pb-3">
-                <div className="flex items-center gap-2">
-                  <Server className="h-4 w-4 text-sky-400" />
-                  <h3 className="text-sm font-bold text-white font-mono uppercase">SUPABASE DATABASE</h3>
-                </div>
-                <span
-                  className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
-                    supabaseActive
-                      ? "bg-emerald-950/40 border border-emerald-800 text-emerald-400"
-                      : "bg-surface-card border border-surface-border text-slate-400"
-                  }`}
-                >
-                  {supabaseActive ? "CONNECTED" : "OFFLINE / LOCAL CACHE"}
-                </span>
+              <div className="flex items-center gap-2 border-b border-surface-border pb-3">
+                <Server className="h-4 w-4 text-pharma-cyan" />
+                <h3 className="text-sm font-bold text-white font-mono uppercase">
+                  DATABASE INFRASTRUCTURE
+                </h3>
               </div>
 
-              <div className="space-y-2 text-xs font-mono text-slate-300">
+              <div className="space-y-2 text-xs font-mono">
                 <div className="flex justify-between">
-                  <span>Supabase Endpoint:</span>
-                  <span className="text-white font-bold">
+                  <span className="text-slate-400">PostgreSQL Backend:</span>
+                  <span className={supabaseActive ? "text-emerald-400 font-bold" : "text-amber-400 font-bold"}>
+                    {supabaseActive ? "ONLINE & CONNECTED" : "OFFLINE / LOCAL STORAGE"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Environment URL:</span>
+                  <span className="text-slate-300 truncate max-w-[180px]">
                     {process.env.NEXT_PUBLIC_SUPABASE_URL ? "Configured in Environment" : "Local Repository (Dev)"}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Row Level Security (RLS):</span>
-                  <span className="text-emerald-400 font-bold">Enabled (12 Policies)</span>
+                  <span className="text-slate-400">Row Level Security (RLS):</span>
+                  <span className="text-emerald-400 font-bold">Enabled & Isolated</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Service-Role Key:</span>
-                  <span className="text-emerald-400 font-bold">Protected (Never Exposed)</span>
+                  <span className="text-slate-400">Service-Role Key:</span>
+                  <span className="text-emerald-400 font-bold">Protected (Never Stored Client-Side)</span>
                 </div>
               </div>
             </div>
 
-            {/* Demo Data Management */}
+            {/* Demo Data Lifecycle */}
             <div className="scientific-card p-6 space-y-4 border-amber-900/40 bg-amber-950/10">
               <div className="flex items-center gap-2 border-b border-surface-border pb-3">
                 <AlertTriangle className="h-4 w-4 text-amber-400" />
                 <h3 className="text-sm font-bold text-white font-mono uppercase">
-                  DEMO DATA MANAGEMENT
+                  BENCHMARK DATA CONTROLS
                 </h3>
               </div>
 
               <p className="text-xs text-slate-300 leading-relaxed font-sans">
-                Initial benchmark drugs (Ibuprofen, Metformin, Acetaminophen, Atorvastatin) are clearly tagged as{" "}
-                <span className="font-mono text-amber-400 font-bold">DEMO DATA</span>. In compliance with validation requirements, demo records can be purged at any time.
+                Standard benchmark drugs (Ibuprofen, Metformin, Acetaminophen, Atorvastatin) provide validated reference physicochemical properties for in silico verification.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
@@ -232,7 +211,7 @@ export default function SettingsPage() {
                   className="flex-1 py-2 px-3 bg-rose-950/40 hover:bg-rose-900/50 border border-rose-800/60 rounded text-rose-300 font-mono text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
-                  <span>PURGE ALL DEMO DATA</span>
+                  <span>Purge Benchmarks</span>
                 </button>
 
                 <button
@@ -241,20 +220,20 @@ export default function SettingsPage() {
                   className="flex-1 py-2 px-3 bg-surface-card hover:bg-surface border border-surface-border text-slate-300 font-mono text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
                 >
                   <RefreshCw className="h-3.5 w-3.5 text-pharma-cyan" />
-                  <span>Reload Benchmark APIs</span>
+                  <span>Reload Benchmarks</span>
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Database Table Statistics across all 12 tables */}
+          {/* Right Column: Database Table Statistics across research tables */}
           <div className="lg:col-span-7 space-y-6">
             <div className="scientific-card p-6 space-y-4">
               <div className="flex items-center justify-between border-b border-surface-border pb-3">
                 <div className="flex items-center gap-2">
                   <Database className="h-4 w-4 text-pharma-cyan" />
                   <h3 className="text-sm font-bold text-white font-mono uppercase">
-                    POSTGRESQL REPOSITORY STATS (12 RLS TABLES)
+                    RESEARCH REPOSITORY SCHEMA & TELEMETRY
                   </h3>
                 </div>
                 <button
@@ -268,18 +247,15 @@ export default function SettingsPage() {
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {[
-                  { name: "drugs", count: tableStats.drugs ?? 4 },
-                  { name: "formulations", count: tableStats.formulations ?? 2 },
-                  { name: "simulations", count: tableStats.simulations ?? 18 },
-                  { name: "dissolution_results", count: tableStats.dissolution_results ?? 14 },
-                  { name: "pk_results", count: tableStats.pk_results ?? 22 },
-                  { name: "virtual_populations", count: tableStats.virtual_populations ?? 8 },
-                  { name: "virtual_patients", count: tableStats.virtual_patients ?? 120 },
-                  { name: "ml_experiments", count: tableStats.ml_experiments ?? 6 },
-                  { name: "hybrid_experiments", count: tableStats.hybrid_experiments ?? 4 },
-                  { name: "optimization_runs", count: tableStats.optimization_runs ?? 7 },
-                  { name: "validation_results", count: tableStats.validation_results ?? 5 },
-                  { name: "research_reports", count: tableStats.research_reports ?? 2 },
+                  { name: "drugs", count: tableStats.drugs ?? 0 },
+                  { name: "formulations", count: tableStats.formulations ?? 0 },
+                  { name: "simulations", count: tableStats.simulations ?? 0 },
+                  { name: "saved_experiments", count: tableStats.active_experiments ?? 0 },
+                  { name: "ml_experiments", count: tableStats.ml_experiments ?? 0 },
+                  { name: "pbpk_runs", count: tableStats.pbpk_runs ?? 0 },
+                  { name: "virtual_patients", count: tableStats.virtual_patients ?? 0 },
+                  { name: "validation_runs", count: tableStats.validation_runs ?? 0 },
+                  { name: "research_reports", count: tableStats.research_reports ?? 0 },
                 ].map((tbl) => (
                   <div key={tbl.name} className="p-3 bg-surface-card rounded border border-surface-border">
                     <div className="text-[10px] font-mono text-slate-400 truncate uppercase">{tbl.name}</div>

@@ -19,7 +19,15 @@ import {
   XAIResult,
   ValidationReport,
   ResearchReport,
+  SavedExperiment,
   AdminProfile,
+  PatientProfile,
+  MedicineInfo,
+  DrugInteractionPair,
+  TreatmentMilestone,
+  MedicationReminderItem,
+  PatientReportDocument,
+  SymptomAssessment,
   DissolutionModelType,
   MLModelType,
 } from "./types";
@@ -225,6 +233,21 @@ export const pharmaApi = {
     return await pharmaDb.saveResearchNotes(notes);
   },
 
+  // ============================================================================
+  // SAVED EXPERIMENTS (SAVE & REOPEN PIPELINE)
+  // ============================================================================
+  async getSavedExperiments(): Promise<SavedExperiment[]> {
+    return await pharmaDb.getSavedExperiments();
+  },
+
+  async saveExperiment(experiment: SavedExperiment): Promise<SavedExperiment> {
+    return await pharmaDb.saveExperiment(experiment);
+  },
+
+  async deleteExperiment(id: string): Promise<boolean> {
+    return await pharmaDb.deleteExperiment(id);
+  },
+
   async getTableStats(): Promise<Record<string, number>> {
     return await pharmaDb.getTableStats();
   },
@@ -242,7 +265,70 @@ export const pharmaApi = {
   },
 
   // ============================================================================
-  // ADMIN PERSONAL PROFILE (POSTGRESQL + STRICT RLS)
+  // PATIENT PROFILE (RESEARCH & SIMULATION ONLY)
+  // ============================================================================
+  async getPatientProfile(): Promise<PatientProfile> {
+    return await pharmaDb.getPatientProfile();
+  },
+
+  async savePatientProfile(profile: PatientProfile): Promise<PatientProfile> {
+    return await pharmaDb.savePatientProfile(profile);
+  },
+
+  // ============================================================================
+  // TREATMENT PROGRESS
+  // ============================================================================
+  async getTreatmentProgress(): Promise<TreatmentMilestone[]> {
+    return await pharmaDb.getTreatmentProgress();
+  },
+
+  async saveTreatmentMilestone(milestone: TreatmentMilestone): Promise<TreatmentMilestone> {
+    return await pharmaDb.saveTreatmentMilestone(milestone);
+  },
+
+  // ============================================================================
+  // MEDICATION REMINDERS
+  // ============================================================================
+  async getMedicationReminders(): Promise<MedicationReminderItem[]> {
+    return await pharmaDb.getMedicationReminders();
+  },
+
+  async saveMedicationReminder(item: MedicationReminderItem): Promise<MedicationReminderItem> {
+    return await pharmaDb.saveMedicationReminder(item);
+  },
+
+  async deleteMedicationReminder(id: string): Promise<boolean> {
+    return await pharmaDb.deleteMedicationReminder(id);
+  },
+
+  // ============================================================================
+  // PATIENT REPORTS
+  // ============================================================================
+  async getPatientReports(): Promise<PatientReportDocument[]> {
+    return await pharmaDb.getPatientReports();
+  },
+
+  async savePatientReport(report: PatientReportDocument): Promise<PatientReportDocument> {
+    return await pharmaDb.savePatientReport(report);
+  },
+
+  // ============================================================================
+  // DOCUMENTED MEDICINES & INTERACTIONS (NO FABRICATED DATA)
+  // ============================================================================
+  getDocumentedMedicines(): MedicineInfo[] {
+    return pharmaDb.getDocumentedMedicines();
+  },
+
+  checkDrugInteractions(medicines: string[]): DrugInteractionPair[] {
+    return pharmaDb.checkDrugInteractions(medicines);
+  },
+
+  analyzeSymptoms(symptoms: string[]): SymptomAssessment {
+    return pharmaDb.analyzeSymptoms(symptoms);
+  },
+
+  // ============================================================================
+  // COMPATIBILITY ALIASES
   // ============================================================================
   async getAdminProfile(): Promise<AdminProfile> {
     return await pharmaDb.getAdminProfile();

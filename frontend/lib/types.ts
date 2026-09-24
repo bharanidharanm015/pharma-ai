@@ -1,18 +1,33 @@
 /**
  * PHARMA AI — TypeScript Type Definitions
- * Strict Single-Admin Private Pharmaceutical Research & Simulation Platform
+ * Professional Pharmaceutical AI Research Platform
+ * Multi-user authentication & user-isolated private research data
  */
 
 // ==============================================================================
-// 1. ADMIN AUTH & SESSION
+// 1. RESEARCHER AUTH & USER SESSION
 // ==============================================================================
-export interface AdminSession {
-  isAuthenticated: boolean;
+export interface UserSession {
+  userId: string;
   email: string;
-  adminName: string;
+  fullName?: string;
+  affiliation?: string;
+  role?: string;
   token?: string;
   sessionStartedAt: string;
+  isAuthenticated: boolean;
 }
+
+// Backward-compatible aliases
+export interface ResearcherSession {
+  isAuthenticated: boolean;
+  email: string;
+  researcherName: string;
+  token?: string;
+  sessionStartedAt: string;
+  userId?: string;
+}
+export type AdminSession = ResearcherSession;
 
 // ==============================================================================
 // 2. DRUGS & RESEARCH SCENARIOS
@@ -383,15 +398,165 @@ export interface ResearchReport {
 }
 
 // ==============================================================================
-// 13. PRIVATE ADMIN PROFILE
+// 13. SAVED EXPERIMENTS (SAVE & REOPEN PIPELINE)
 // ==============================================================================
+export interface SavedExperiment {
+  id: string;
+  experiment_id: string;
+  user_id?: string;
+  title: string;
+  drug_name: string;
+  formulation_name: string;
+  model: string;
+  parameters_json: Record<string, any>;
+  results_json: Record<string, any>;
+  validation_status: "Validated" | "Conditional" | "Pending" | "Exploratory";
+  notes?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+// ==============================================================================
+// 13. PATIENT PROFILE (RESEARCH & SIMULATION)
+// ==============================================================================
+export interface PatientProfile {
+  id: string;
+  patient_name: string;
+  age: number;
+  sex: "Male" | "Female" | "Other";
+  weight_kg: number;
+  symptoms: string[];
+  symptom_start_date: string;
+  existing_medicines: string[];
+  known_allergies: string[];
+  medical_conditions: string[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+// ==============================================================================
+// 14. SYMPTOM CHECKER & CORRELATION ENGINE
+// ==============================================================================
+export interface PossibleCondition {
+  condition: string;
+  match_level: "High Correlation" | "Moderate Correlation" | "Possible";
+  match_percentage: number;
+  reasoning: string;
+  red_flag_warnings: string[];
+  supportive_guidance: string;
+  when_to_seek_care: string;
+}
+
+export interface SymptomAssessment {
+  symptoms_analyzed: string[];
+  matched_conditions: PossibleCondition[];
+  red_flags_present: string[];
+  general_precautions: string[];
+  disclaimer: string;
+}
+
+// ==============================================================================
+// 15. MEDICINE INFORMATION (DOCUMENTED REFERENCE)
+// ==============================================================================
+export interface MedicineInfo {
+  id: string;
+  generic_name: string;
+  example_brand_names: string[];
+  drug_class: string;
+  common_uses: string[];
+  common_side_effects: string[];
+  important_warnings: string[];
+  drug_interactions: string[];
+  precautions: string[];
+  treatment_duration_notes: string;
+  provenance: string;
+}
+
+// ==============================================================================
+// 16. DRUG INTERACTION CHECKER
+// ==============================================================================
+export interface DrugInteractionPair {
+  drug_a: string;
+  drug_b: string;
+  severity: "Major" | "Moderate" | "Minor" | "No Documented Interaction";
+  mechanism: string;
+  explanation: string;
+  safety_recommendation: string;
+  consultation_notice: string;
+  provenance: string;
+}
+
+// ==============================================================================
+// 17. TREATMENT PROGRESS
+// ==============================================================================
+export interface TreatmentMilestone {
+  id?: string;
+  patient_id?: string;
+  milestone: "Day 1" | "Day 3" | "Day 7" | "Later";
+  label: string;
+  status: "Better" | "Same" | "Worse" | "Not Assessed";
+  symptoms_observed: string;
+  clinical_notes: string;
+  recorded_at: string;
+}
+
+// ==============================================================================
+// 18. MEDICATION REMINDER
+// ==============================================================================
+export interface MedicationReminderItem {
+  id: string;
+  medicine_name: string;
+  prescribed_dose: string;
+  schedule_time: "Morning" | "Afternoon" | "Night" | "Custom";
+  reminder_time: string; // HH:mm format
+  status: "Taken" | "Missed" | "Scheduled";
+  notes?: string;
+  history: {
+    date: string;
+    action: "Taken" | "Missed";
+    recorded_at: string;
+  }[];
+}
+
+// ==============================================================================
+// 19. EMERGENCY / RED FLAGS
+// ==============================================================================
+export interface EmergencyRedFlag {
+  id: string;
+  title: string;
+  symptoms: string[];
+  urgency: "Immediate Emergency (Call 112)" | "Urgent Medical Attention";
+  action_directive: string;
+  clinical_rationale: string;
+}
+
+// ==============================================================================
+// 20. PATIENT REPORT
+// ==============================================================================
+export interface PatientReportDocument {
+  id: string;
+  generated_at: string;
+  patient: PatientProfile;
+  symptom_summary: {
+    duration_days: number;
+    primary_symptoms: string[];
+  };
+  ai_observations: string[];
+  interactions_identified: DrugInteractionPair[];
+  red_flags_status: string;
+  treatment_timeline: TreatmentMilestone[];
+  questions_for_doctor: string[];
+  disclaimer: string;
+}
+
+// Backward-compatible AdminProfile alias to prevent broken imports
 export interface AdminProfile {
   id: string;
   admin_email: string;
   full_name: string;
   date_of_birth: string;
-  gender: "Male" | "Female" | "Other" | "Prefer not to say";
-  blood_group: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-";
+  gender: string;
+  blood_group: string;
   weight_kg: number;
   height_cm: number;
   contact_number: string;
